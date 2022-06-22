@@ -4,7 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:oxy="http://oxyplot.org/wpf"
-        xmlns:local="clr-namespace:AppForStand"
+        xmlns:local="clr-namespace:AppForStand" d:DataContext="{d:DesignInstance Type=local:Device}"
         mc:Ignorable="d"
         
         Title="Приложение для стенда" Height="450" Width="830" MinHeight="210" MinWidth="700">
@@ -94,7 +94,6 @@
             <TextBlock Margin="60,0,45,45"  TextWrapping="NoWrap" Text="Выберите показатель" Height="16" VerticalAlignment="Bottom"/>
             <ComboBox x:Name="ParametersBox" Margin="189,0,0,45" Height="18" FontSize="10" Width="114"  VerticalAlignment="Bottom" HorizontalAlignment="Left" >
             </ComboBox>
-
         </Grid>
         <Button Content="Справка" Margin="43,0,43,10" Grid.Column="0" Click="Help_Button_Click" Height="26" VerticalAlignment="Bottom"/>
     </Grid>

@@ -13,18 +13,18 @@ using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
 using System.IO;
 using System.ComponentModel;
+using System.Windows.Data;
 
 namespace AppForStand
 {
-
-
 
     public partial class MainWindow : Window
     {
         private ObservableCollection<Device> Devices { get; set; }
         private List<string> PortsName;
-        private ObservableCollection<PortProperty> Parameters;
-        //private List<int> ParameterCounters;
+        private List<string> _parameters;
+        
+        
 
 
 
@@ -122,7 +122,7 @@ namespace AppForStand
         private void initialize()
         {
             PortsName = SerialPort.GetPortNames().ToList();
-            Parameters = new ObservableCollection<PortProperty>();
+            
             //ParameterCounters = new List<int>();
 
             PortToSendMessage.ItemsSource = PortsName;
@@ -130,7 +130,15 @@ namespace AppForStand
             portList.ItemsSource = Devices;
             monitorsList.ItemsSource = Devices;
 
-            ParametersBox.ItemsSource = Parameters;
+            _parameters = new List<string>();
+
+
+            //comboBox1.DisplayMember = "Name";
+
+
+            //ParametersBox.Items.Add("kot");
+            //ParametersBox.Items.Add("krot");
+
 
 
 
@@ -166,24 +174,30 @@ namespace AppForStand
                     var _data = device.ArrayData[device.ArrayData.Length - 1];
                     JObject o1 = JObject.Parse(_data);
                     JsonTextReader reader = new JsonTextReader(new StringReader(_data));
+                    //MessageBox.Show(_data);
                     while (reader.Read())
-                    { 
-                        if (reader.TokenType == JsonToken.PropertyName)
+                    {
+                        //MessageBox.Show("зашли",reader.TokenType.ToString());
+                        if (reader.Value != null && reader.TokenType == JsonToken.PropertyName)
                         {
-                            PortProperty p = new PortProperty();
-                            p.TargetDevice = device;
-                            p.Property = reader.Value.ToString();
-                            if (Parameters.Contains(p) || reader.Value.ToString() == "")
+                            //MessageBox.Show(reader.Value.ToString(), "1");
+                            if (!_parameters.Contains(reader.Value.ToString()))
                             {
-                                //ParameterCounters[Parameters.IndexOf(reader.Value.ToString())] = 30 * Devices.Count;
-                                continue;
-                            }
-                            else
-                            {
-                                Parameters.Add(p);
-                                //ParameterCounters.Add(30 * Devices.Count);
+                                _parameters.Add(reader.Value.ToString());
+                                //MessageBox.Show(reader.Value.ToString(), "2");
+                                //ParametersBox.ItemsSource = new List<string>();
+
+                                try {
+                                    Dispatcher.Invoke(new Action(() => { ParametersBox.Items.Add(reader.Value.ToString()); }));
+                                     }
+                                catch (Exception ex) { MessageBox.Show("Nu bliiiin", "");
+                                    MessageBox.Show(ex.Message, "");
+                                }
+                                //MessageBox.Show(reader.Value.ToString(), "3");
                             }
                         }
+
+                       
                         //if (reader.Value != null)
                         //{
                         //Console.WriteLine("Token: {0}, Value: {1}", reader.TokenType, reader.Value);
@@ -197,6 +211,7 @@ namespace AppForStand
                         //  MessageBox.Show("ok", "");
                         //else MessageBox.Show("not ok", "");
                     }
+                    //box.ItemsSource = Parameters.ToArray();
                     /*for (int i = 0; i < ParameterCounters.Count; i++)
                     {
                         ParameterCounters[i]--;
@@ -212,10 +227,7 @@ namespace AppForStand
                     }*/
 
                 }
-                catch
-                {
-                    //MessageBox.Show("nothing", ""); //continue;
-                }
+                catch { }
             };
         }
         private void Button_Set_Path_To_Hex(object sender, RoutedEventArgs e)
@@ -234,9 +246,24 @@ namespace AppForStand
 
         private void Button_Update_Ports(object sender, RoutedEventArgs e)
         {
+            string rrr = "";
+            for (int i = 0; i < _parameters.Count; i++)
+                rrr += _parameters[i];
+            MessageBox.Show(rrr);
+            //ParametersBox.ItemsSource = new List<string>() { };
+            //Parameters.RemoveAll(str => true);
+            //ParametersBox.ItemsSource = null;
+            //foreach (string port in PortsName)
+            //{
 
-            
-            var ls2 = new LineSeries();
+            //    Devices[Devices.Count - 1].PropertyChanged += updateParametersInfo;
+            //}
+
+            //ParametersBox.Items.Clear();
+            _parameters = new List<string>();
+            ParametersBox.Items.Clear();
+
+             var ls2 = new LineSeries();
                         //ls2.Points.
                         ls2.Points.Add(new DataPoint(10, 10));
                         ls2.Points.Add(new DataPoint(30, 20));
@@ -260,7 +287,6 @@ namespace AppForStand
                                 PortsName.Add(port);
                                 Devices.Add(new Device { Port = port });
                                 Devices[Devices.Count - 1].PropertyChanged += updateParametersInfo;
-                    //
                             } else if (!Devices[PortsName.IndexOf(port)]._continue)
                                 Devices[PortsName.IndexOf(port)].StartReadingFromSerialPort();
                         for (int i = 0; i < PortsName.Count; i++)
@@ -269,14 +295,6 @@ namespace AppForStand
                             {
                                 PortsName.RemoveAt(i);
                                 Devices[i].StopReadingFromSerialPort();
-                                for (int j = Parameters.Count-1; j >= 0; j--)
-                                {
-                                    if (Parameters[j].TargetDevice.Equals(Devices[i]))
-                                    {
-                                            Parameters.RemoveAt(j);
-                                            //j--;
-                                    }
-                                }
                                 Devices.RemoveAt(i);
                             }
 

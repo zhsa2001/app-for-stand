@@ -33,52 +33,56 @@ namespace AppForStand
         private Queue<string> _receivedData = new Queue<string>();
         
         public string ReceivedData 
-        { 
-            get {
+        {
+            get
+            {
                 string res = "";
-                foreach (string _data in _receivedData)
+                lock (_receivedData)
                 {
-                    if (_data == null)
-                        continue;
-                    res += _data;
-                    res += "\n";
-                    /*string json = @"{
-                       'CPU': 'Intel',
-                       'PSU': 500
-                    }";
-
-                    //JsonProperty
-                    try { JObject o1 = JObject.Parse(json); if (o1["CPU"] != null)
-                            MessageBox.Show("ok", "");
-                        else MessageBox.Show("not ok", "");
-                    }
-                    catch { MessageBox.Show("nothing", ""); continue; }
-                    
-                    //JToken 
-                    //if ()
-                    JsonTextReader reader = new JsonTextReader(new StringReader(json));
-                    while (reader.Read())
+                    foreach (string _data in _receivedData)
                     {
-                        if (reader.Value != null)
-                        {
-                            //Console.WriteLine("Token: {0}, Value: {1}", reader.TokenType, reader.Value);
-                            MessageBox.Show("Token: " + reader.TokenType + ", Value: " + reader.Value, "");
+                        if (_data == null)
+                            continue;
+                        res += _data;
+                        res += "\n";
+                        /*string json = @"{
+                           'CPU': 'Intel',
+                           'PSU': 500
+                        }";
+
+                        //JsonProperty
+                        try { JObject o1 = JObject.Parse(json); if (o1["CPU"] != null)
+                                MessageBox.Show("ok", "");
+                            else MessageBox.Show("not ok", "");
                         }
-                        else
+                        catch { MessageBox.Show("nothing", ""); continue; }
+
+                        //JToken 
+                        //if ()
+                        JsonTextReader reader = new JsonTextReader(new StringReader(json));
+                        while (reader.Read())
                         {
-                            Console.WriteLine("Token: {0}", reader.TokenType);
+                            if (reader.Value != null)
+                            {
+                                //Console.WriteLine("Token: {0}, Value: {1}", reader.TokenType, reader.Value);
+                                MessageBox.Show("Token: " + reader.TokenType + ", Value: " + reader.Value, "");
+                            }
+                            else
+                            {
+                                Console.WriteLine("Token: {0}", reader.TokenType);
+                            }
                         }
+                        //object data = JsonConvert.DeserializeObject(_data);
+
+                        //object data = JsonSerializer.Deserialize(_data, object, )
+
+                        //dataGridView.DataSource = data;
+                        //deseri
+                        */
                     }
-                    //object data = JsonConvert.DeserializeObject(_data);
 
-                    //object data = JsonSerializer.Deserialize(_data, object, )
-
-                    //dataGridView.DataSource = data;
-                    //deseri
-                    */
+                    return res;
                 }
-                
-                return res;
             }
             set { } 
         }
