@@ -92,7 +92,7 @@
             <TextBlock HorizontalAlignment="Left" Margin="60,30,0,0" TextWrapping="Wrap" Text="График" VerticalAlignment="Top"/>
             <oxy:PlotView x:Name="graphics" Margin="60,70,25,65" Background="#f0f0f0" />
             <TextBlock Margin="60,0,45,45"  TextWrapping="NoWrap" Text="Выберите показатель" Height="16" VerticalAlignment="Bottom"/>
-            <ComboBox x:Name="ParametersBox" Margin="189,0,0,45" Height="18" FontSize="10" Width="114"  VerticalAlignment="Bottom" HorizontalAlignment="Left" >
+            <ComboBox x:Name="ParametersBox" Margin="189,0,0,45" Height="18" FontSize="10" Width="114"  VerticalAlignment="Bottom" HorizontalAlignment="Left" SelectionChanged="ParametersBox_SelectionChanged">
             </ComboBox>
         </Grid>
         <Button Content="Справка" Margin="43,0,43,10" Grid.Column="0" Click="Help_Button_Click" Height="26" VerticalAlignment="Bottom"/>

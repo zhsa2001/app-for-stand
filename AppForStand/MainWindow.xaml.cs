@@ -14,6 +14,7 @@ using Newtonsoft.Json;
 using System.IO;
 using System.ComponentModel;
 using System.Windows.Data;
+using OxyPlot.Legends;
 
 namespace AppForStand
 {
@@ -23,6 +24,7 @@ namespace AppForStand
         private ObservableCollection<Device> Devices { get; set; }
         private List<string> PortsName;
         private List<string> _parameters;
+        private List<LineSeries> LineSeries;
         
         
 
@@ -141,23 +143,28 @@ namespace AppForStand
 
 
 
-
+            LineSeries = new List<LineSeries>();
             foreach (string port in PortsName)
             {
                 Devices.Add(new Device { Port = port });
                 Devices[Devices.Count - 1].StartReadingFromSerialPort();
                 Devices[Devices.Count - 1].PropertyChanged += updateParametersInfo;
+                LineSeries.Add(new LineSeries());
+                LineSeries[LineSeries.Count - 1].Title = port;
+                Model.Series.Add(LineSeries[LineSeries.Count - 1]);
             }
             //Devices[0].StartReadingFromSerialPort();
 
 
             Closing += Window_Closing;
-            var ls2 = new LineSeries();
-            //ls2.Points.
-            ls2.Points.Add(new DataPoint(20, 20));
-            ls2.Points.Add(new DataPoint(30, 20));
+            var l = new Legend
+            {
+                LegendPlacement = LegendPlacement.Inside,
+                LegendPosition = LegendPosition.RightTop,
+                
+            };
 
-            Model.Series.Add(ls2);
+            Model.Legends.Add(l);
             graphics.Model = Model;
 
         }
@@ -190,7 +197,7 @@ namespace AppForStand
                                 try {
                                     Dispatcher.Invoke(new Action(() => { ParametersBox.Items.Add(reader.Value.ToString()); }));
                                      }
-                                catch (Exception ex) { MessageBox.Show("Nu bliiiin", "");
+                                catch (Exception ex) { 
                                     MessageBox.Show(ex.Message, "");
                                 }
                                 //MessageBox.Show(reader.Value.ToString(), "3");
@@ -211,6 +218,29 @@ namespace AppForStand
                         //  MessageBox.Show("ok", "");
                         //else MessageBox.Show("not ok", "");
                     }
+                    Dispatcher.Invoke(new Action(() =>
+                    {
+                        if (ParametersBox.SelectedIndex != -1)
+                        {
+                            //MessageBox.Show("ok", "");
+                            if (o1[ParametersBox.SelectedValue.ToString()] != null)
+                            {
+                                //MessageBox.Show("что-то есть", "");
+                                //MessageBox.Show(((int)(o1.GetValue(ParametersBox.SelectedValue.ToString()))).ToString(), "");
+                                var index = Devices.IndexOf(device);
+                                if (LineSeries[index].Points.Count >= 30)
+                                    LineSeries[index].Points.RemoveAt(0);
+                                LineSeries[index].Points.Add(new DataPoint(LineSeries[index].Points.Count, (double)(o1.GetValue(ParametersBox.SelectedValue.ToString()))));
+                                for (int i = 0; i < LineSeries[index].Points.Count; i++)
+                                {
+                                    LineSeries[index].Points[i] = new DataPoint(i, LineSeries[index].Points[i].Y);
+                                }
+                                Model.InvalidatePlot(true);
+                            }
+                        }
+                        //else MessageBox.Show("not ok", "");
+                        //MessageBox.Show("2", "");
+                    }));
                     //box.ItemsSource = Parameters.ToArray();
                     /*for (int i = 0; i < ParameterCounters.Count; i++)
                     {
@@ -246,61 +276,66 @@ namespace AppForStand
 
         private void Button_Update_Ports(object sender, RoutedEventArgs e)
         {
-            string rrr = "";
-            for (int i = 0; i < _parameters.Count; i++)
-                rrr += _parameters[i];
-            MessageBox.Show(rrr);
-            //ParametersBox.ItemsSource = new List<string>() { };
-            //Parameters.RemoveAll(str => true);
-            //ParametersBox.ItemsSource = null;
-            //foreach (string port in PortsName)
-            //{
-
-            //    Devices[Devices.Count - 1].PropertyChanged += updateParametersInfo;
-            //}
-
-            //ParametersBox.Items.Clear();
             _parameters = new List<string>();
             ParametersBox.Items.Clear();
 
-             var ls2 = new LineSeries();
-                        //ls2.Points.
-                        ls2.Points.Add(new DataPoint(10, 10));
-                        ls2.Points.Add(new DataPoint(30, 20));
-                        Model.Series.Clear();
-                        Model.Series.Add(ls2);
-                        Model.InvalidatePlot(true);
+             //var ls2 = new LineSeries();
+             //           //ls2.Points.
+             //           ls2.Points.Add(new DataPoint(10, 10));
+             //           ls2.Points.Add(new DataPoint(30, 20));
+             //           Model.Series.Clear();
+             //           Model.Series.Add(ls2);
+             //           Model.InvalidatePlot(true);
                         //graphics.
                         //graphics.Model = Model;
-                        string[] ports = SerialPort.GetPortNames();
-                        if (ports.Equals(PortsName))
-                        {
-                            foreach (var dev in Devices)
-                                if (!dev._continue)
-                                    dev.StartReadingFromSerialPort();
-                            return;
-                        }
+            string[] ports = SerialPort.GetPortNames();
+            if (ports.Equals(PortsName))
+            {
+                foreach (var dev in Devices)
+                    if (!dev._continue)
+                        dev.StartReadingFromSerialPort();
+                return;
+            }
 
-                        foreach (string port in ports)
-                            if (!PortsName.Contains(port))
-                            {
-                                PortsName.Add(port);
-                                Devices.Add(new Device { Port = port });
-                                Devices[Devices.Count - 1].PropertyChanged += updateParametersInfo;
-                            } else if (!Devices[PortsName.IndexOf(port)]._continue)
-                                Devices[PortsName.IndexOf(port)].StartReadingFromSerialPort();
-                        for (int i = 0; i < PortsName.Count; i++)
-                        {
-                            if (!ports.Contains(PortsName[i]))
-                            {
-                                PortsName.RemoveAt(i);
-                                Devices[i].StopReadingFromSerialPort();
-                                Devices.RemoveAt(i);
-                            }
+            foreach (string port in ports)
+                if (!PortsName.Contains(port))
+                {
+                    PortsName.Add(port);
+                    Devices.Add(new Device { Port = port });
+                    Devices[Devices.Count - 1].PropertyChanged += updateParametersInfo;
+                    LineSeries.Add(new LineSeries());               
+                    Model.Series.Add(LineSeries[LineSeries.Count - 1]);
+                    LineSeries[LineSeries.Count - 1].Title = port;
+                    Model.InvalidatePlot(true);
+                } else if (!Devices[PortsName.IndexOf(port)]._continue)
+            Devices[PortsName.IndexOf(port)].StartReadingFromSerialPort();
+            
+            for (int i = PortsName.Count - 1; i >= 0; i--)
+            {
+                if (!ports.Contains(PortsName[i]))
+                {
+                    PortsName.RemoveAt(i);
+                    Devices[i].StopReadingFromSerialPort();
+                    Devices.RemoveAt(i);
+                    LineSeries.RemoveAt(i);
+                  
+                    //graphics.Model = Model;
+                    Model.Series.RemoveAt(i);
+                    //Model.Legends.Clear();
+                    //var l = new Legend
+                    //{
+                    //    LegendPlacement = LegendPlacement.Inside,
+                    //    LegendPosition = LegendPosition.RightTop,
 
-                        }
-                        PortToSendMessage.ItemsSource = new List<string>();
-                        PortToSendMessage.ItemsSource = PortsName;
+                    //};
+
+                    //Model.Legends.Add(l);
+                    Model.InvalidatePlot(true);
+                }
+
+            }
+            PortToSendMessage.ItemsSource = new List<string>();
+            PortToSendMessage.ItemsSource = PortsName;
 
             //Parameters = 
             //ParameterCounters = new List<int>();
@@ -361,8 +396,6 @@ namespace AppForStand
             }
         }
 
-        private void Draw() { }
-
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             foreach (var device in Devices)
@@ -387,6 +420,15 @@ namespace AppForStand
                     MessageTextBox.Text = "";
                     return;
                 }
+            }
+        }
+
+        private void ParametersBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            for (int i = 0; i < LineSeries.Count; i++)
+            {
+                LineSeries[i].Points.Clear();
+                Model.InvalidatePlot(true);
             }
         }
     }
