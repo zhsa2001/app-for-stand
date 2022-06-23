@@ -239,6 +239,15 @@
   <ItemGroup>
     <Resource Include="resources\справка1.png" />
   </ItemGroup>
+  <ItemGroup>
+    <Resource Include="resources\чтение.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="resources\отправка данных.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="resources\график.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\packages\System.Text.Json.6.0.5\build\System.Text.Json.targets" Condition="Exists('..\packages\System.Text.Json.6.0.5\build\System.Text.Json.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
