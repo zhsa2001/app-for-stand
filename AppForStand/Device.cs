@@ -161,9 +161,9 @@ namespace AppForStand
                 var t = Thread.CurrentThread;
                 using (_tokenSourceForRead.Token.Register(t.Abort))
                 {
-                    //if (_serialPort == null || !_serialPort.IsOpen)
-                    //{
-                    _serialPort = new SerialPort();
+                     if (_serialPort == null || !_serialPort.IsOpen)
+                     {
+                         _serialPort = new SerialPort();
                     _serialPort.PortName = Port;
                     _serialPort.BaudRate = int.Parse(_baudRate == null ? "9600" : _baudRate);
                     _serialPort.ReadTimeout = 1000;
@@ -178,15 +178,15 @@ namespace AppForStand
                     _continue = true;
                     Thread readThread = new Thread(Read);
                     readThread.Start();
-                    //readThread.Join();
-                    //_serialPort.Close();
-                    //return;
-                    //}
-                    //else if (_serialPort.IsOpen)
-                    //{
-                    //    _serialPort.Close();
-                    //    StartReadingFromSerialPort();
-                    //}
+                        //readThread.Join();
+                        //_serialPort.Close();
+                        //return;
+                    }
+                    else if (_serialPort.IsOpen)
+                    {
+                        _serialPort.Close();
+                        StartReadingFromSerialPort();
+                    }
                 }
                 
             });
@@ -195,7 +195,7 @@ namespace AppForStand
         public void StopReadingFromSerialPort()
         {
             _continue = false;
-            if (_serialPort.IsOpen)
+            if (_serialPort != null && _serialPort.IsOpen)
             {
                 if (_tokenSourceForRead != null)
                     _tokenSourceForRead.Cancel();
