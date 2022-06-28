@@ -3,6 +3,7 @@ using ArduinoUploader.Hardware;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO.Ports;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -14,6 +15,7 @@ namespace AppForStand
 {
     internal class Device : INotifyPropertyChanged
     {
+        Task t2;
         private SerialPort _serialPort;
         public bool _continue { get; private set; } = false;
         public string Port { get; set; }
@@ -45,40 +47,6 @@ namespace AppForStand
                             continue;
                         res += _data;
                         res += "\n";
-                        /*string json = @"{
-                           'CPU': 'Intel',
-                           'PSU': 500
-                        }";
-
-                        //JsonProperty
-                        try { JObject o1 = JObject.Parse(json); if (o1["CPU"] != null)
-                                MessageBox.Show("ok", "");
-                            else MessageBox.Show("not ok", "");
-                        }
-                        catch { MessageBox.Show("nothing", ""); continue; }
-
-                        //JToken 
-                        //if ()
-                        JsonTextReader reader = new JsonTextReader(new StringReader(json));
-                        while (reader.Read())
-                        {
-                            if (reader.Value != null)
-                            {
-                                //Console.WriteLine("Token: {0}, Value: {1}", reader.TokenType, reader.Value);
-                                MessageBox.Show("Token: " + reader.TokenType + ", Value: " + reader.Value, "");
-                            }
-                            else
-                            {
-                                Console.WriteLine("Token: {0}", reader.TokenType);
-                            }
-                        }
-                        //object data = JsonConvert.DeserializeObject(_data);
-
-                        //object data = JsonSerializer.Deserialize(_data, object, )
-
-                        //dataGridView.DataSource = data;
-                        //deseri
-                        */
                     }
 
                     return res;
@@ -86,7 +54,6 @@ namespace AppForStand
             }
             set { } 
         }
-        //private int _countData { get; set; } = 0;
 
         private CancellationTokenSource _tokenSourceForLoad;
         private CancellationTokenSource _tokenSourceForRead;
@@ -143,6 +110,13 @@ namespace AppForStand
             }
             
             _tokenSourceForLoad = new CancellationTokenSource();
+            StopReadingFromSerialPort();
+            //if (t2 != null)
+            //{
+            //    _tokenSourceForRead.Cancel();
+            //}
+            //while (t2.IsCompleted) { }
+
             var uploader = new ArduinoSketchUploader(
                     new ArduinoSketchUploaderOptions()
                     {
@@ -158,58 +132,61 @@ namespace AppForStand
                     uploader.UploadSketch();
                 }
             }, _tokenSourceForLoad.Token);
-
-            Task t2 = Task.Run(() => {
+            
+            Task t3 = Task.Run(() => {
                 bool isOk = true;
                 try
                 {
                     task_Load.Start();
                     task_Load.Wait(-1);
                 }
-                catch
+                catch(Exception ex)
                 {
+                    Trace.WriteLine("Message"+ex.Message);
                     isOk = false;
                     MessageBox.Show("Не удалось загрузить прошивку на порт " + Port, "", MessageBoxButton.OK);
                 } 
                 if (isOk)
                     MessageBox.Show("Прошивка загружена на порт " + Port, "", MessageBoxButton.OK);
+                StartReadingFromSerialPort();
             });
+            
         }
 
         public void StartReadingFromSerialPort()
         {
             _tokenSourceForRead = new CancellationTokenSource();
-            Task t2 = Task.Run(() =>
+             t2 = Task.Run(() =>
             {
                 var t = Thread.CurrentThread;
                 using (_tokenSourceForRead.Token.Register(t.Abort))
                 {
-                    if (_serialPort == null || !_serialPort.IsOpen)
+                    //if (_serialPort == null || !_serialPort.IsOpen)
+                    //{
+                    _serialPort = new SerialPort();
+                    _serialPort.PortName = Port;
+                    _serialPort.BaudRate = int.Parse(_baudRate == null ? "9600" : _baudRate);
+                    _serialPort.ReadTimeout = 1000;
+                    _serialPort.WriteTimeout = 1000;
+                    _serialPort.Encoding = new UTF8Encoding();
+                    try { _serialPort.Open(); }
+                    catch(UnauthorizedAccessException ex)
                     {
-                        _serialPort = new SerialPort();
-                        _serialPort.PortName = Port;
-                        _serialPort.BaudRate = int.Parse(_baudRate == null ? "9600" : _baudRate);
-                        _serialPort.ReadTimeout = 1000;
-                        _serialPort.WriteTimeout = 500;
-                        _serialPort.Encoding = new UTF8Encoding();
-                        try { _serialPort.Open(); }
-                        catch(UnauthorizedAccessException ex)
-                        {
-
-                        }
-                        System.Threading.Thread.Sleep(1000);
-                        _continue = true;
-                        Thread readThread = new Thread(Read);
-                        readThread.Start();
-                        readThread.Join();
-                        _serialPort.Close();
-                        return;
+                        MessageBox.Show("Ooops");
                     }
-                    else if (_serialPort.IsOpen)
-                    {
-                        _serialPort.Close();
-                        StartReadingFromSerialPort();
-                    }
+                    //System.Threading.Thread.Sleep(1000);
+                    _continue = true;
+                    Thread readThread = new Thread(Read);
+                    readThread.Start();
+                    //readThread.Join();
+                    //_serialPort.Close();
+                    //return;
+                    //}
+                    //else if (_serialPort.IsOpen)
+                    //{
+                    //    _serialPort.Close();
+                    //    StartReadingFromSerialPort();
+                    //}
                 }
                 
             });
@@ -218,8 +195,13 @@ namespace AppForStand
         public void StopReadingFromSerialPort()
         {
             _continue = false;
-            if (_tokenSourceForRead != null)
-                _tokenSourceForRead.Cancel();
+            if (_serialPort.IsOpen)
+            {
+                if (_tokenSourceForRead != null)
+                    _tokenSourceForRead.Cancel();
+                _serialPort.Close();
+            }
+            
         }
 
         public void Read()
@@ -228,32 +210,21 @@ namespace AppForStand
             {
                 try
                 {
-                    //_countData++;
-                    
                     string message = _serialPort.ReadLine();
                     _receivedData.Enqueue(message);
                     if (_receivedData.Count > 30)
                     {
                         _receivedData.Dequeue();
                     }
-                    //ReceivedData += message + "\n";
-                    //_countData++;
-                    //MessageBox.Show(ReceivedData, "");
-
-                    //MessageBox.Show(message, "");
-                    //ReceivedData.Add(message);
-
                 }
                 catch (TimeoutException) 
                 {
                     _receivedData.Enqueue(null);
-                    //MessageBox.Show("to", "");
                 }
                 catch (Exception) 
                 {
-                    //MessageBox.Show("Не удается считать данные с порта " + Port, "");
-                    _continue=false;
-                    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!! _receivedData.Clear();
+                    StopReadingFromSerialPort();
+
                 }
                 
                 OnPropertyChanged("ReceivedData");

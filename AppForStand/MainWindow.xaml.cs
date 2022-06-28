@@ -32,87 +32,12 @@ namespace AppForStand
 
         public PlotModel Model { get; private set; } = new PlotModel
         {
-            //Title = "Hello WinUI 3",
             PlotAreaBorderColor = OxyColors.Gray,
             Axes =
     {
         new LinearAxis { Position = AxisPosition.Bottom },
         new LinearAxis { Position = AxisPosition.Left },
     },
-            /*Series =
-    {
-        new LineSeries
-        {
-            Title = "LineSeries",
-            MarkerType = MarkerType.None,
-            Color = OxyColors.Automatic,
-            Points =
-            {
-                new DataPoint(0, 0),
-                new DataPoint(10, 18),
-                new DataPoint(20, 12),
-                new DataPoint(30, 8),
-                new DataPoint(40, 15),
-            }
-        },
-        new LineSeries
-        {
-            Title = "LineSeries",
-            MarkerType = MarkerType.None,
-            Color = OxyColors.Automatic,
-            Points =
-            {
-                new DataPoint(10, 0),
-                new DataPoint(20, 18),
-                new DataPoint(30, 12),
-                new DataPoint(40, 8),
-                new DataPoint(50, 15),
-            }
-        },
-        new LineSeries
-        {
-            Title = "LineSeries",
-            MarkerType = MarkerType.None,
-            Color = OxyColors.Automatic,
-            Points =
-            {
-                new DataPoint(20, 0),
-                new DataPoint(30, 18),
-                new DataPoint(40, 12),
-                new DataPoint(50, 8),
-                new DataPoint(60, 15),
-            }
-        },
-        new LineSeries
-        {
-            Title = "LineSeries",
-            MarkerType = MarkerType.None,
-            Color = OxyColors.Automatic,
-            Points =
-            {
-                new DataPoint(30, 0),
-                new DataPoint(40, 18),
-                new DataPoint(50, 12),
-                new DataPoint(60, 8),
-                new DataPoint(70, 15),
-            }
-        },
-        
-        new LineSeries
-        {
-            Title = "LineSeries",
-            MarkerType = MarkerType.None,
-            Color = OxyColors.Automatic,
-            Points =
-            {
-                new DataPoint(50, 0),
-                new DataPoint(60, 18),
-                new DataPoint(70, 12),
-                new DataPoint(80, 8),
-                new DataPoint(90, 15),
-            }
-        },
-    } */
         };
 
         public MainWindow()
@@ -123,26 +48,12 @@ namespace AppForStand
 
         private void initialize()
         {
-            PortsName = SerialPort.GetPortNames().ToList();
-            
-            //ParameterCounters = new List<int>();
-
+            PortsName = SerialPort.GetPortNames().ToList();           
             PortToSendMessage.ItemsSource = PortsName;
             Devices = new ObservableCollection<Device>();
             portList.ItemsSource = Devices;
             monitorsList.ItemsSource = Devices;
-
             _parameters = new List<string>();
-
-
-            //comboBox1.DisplayMember = "Name";
-
-
-            //ParametersBox.Items.Add("kot");
-            //ParametersBox.Items.Add("krot");
-
-
-
             LineSeries = new List<LineSeries>();
             foreach (string port in PortsName)
             {
@@ -153,9 +64,6 @@ namespace AppForStand
                 LineSeries[LineSeries.Count - 1].Title = port;
                 Model.Series.Add(LineSeries[LineSeries.Count - 1]);
             }
-            //Devices[0].StartReadingFromSerialPort();
-
-
             Closing += Window_Closing;
             var l = new Legend
             {
@@ -163,10 +71,8 @@ namespace AppForStand
                 LegendPosition = LegendPosition.RightTop,
                 
             };
-
             Model.Legends.Add(l);
             graphics.Model = Model;
-
         }
 
         private void updateParametersInfo(object sender, PropertyChangedEventArgs e)
@@ -181,52 +87,28 @@ namespace AppForStand
                     var _data = device.ArrayData[device.ArrayData.Length - 1];
                     JObject o1 = JObject.Parse(_data);
                     JsonTextReader reader = new JsonTextReader(new StringReader(_data));
-                    //MessageBox.Show(_data);
                     while (reader.Read())
                     {
-                        //MessageBox.Show("зашли",reader.TokenType.ToString());
                         if (reader.Value != null && reader.TokenType == JsonToken.PropertyName)
                         {
-                            //MessageBox.Show(reader.Value.ToString(), "1");
                             if (!_parameters.Contains(reader.Value.ToString()))
                             {
                                 _parameters.Add(reader.Value.ToString());
-                                //MessageBox.Show(reader.Value.ToString(), "2");
-                                //ParametersBox.ItemsSource = new List<string>();
-
                                 try {
                                     Dispatcher.Invoke(new Action(() => { ParametersBox.Items.Add(reader.Value.ToString()); }));
                                      }
                                 catch (Exception ex) { 
                                     MessageBox.Show(ex.Message, "");
                                 }
-                                //MessageBox.Show(reader.Value.ToString(), "3");
                             }
                         }
-
-                       
-                        //if (reader.Value != null)
-                        //{
-                        //Console.WriteLine("Token: {0}, Value: {1}", reader.TokenType, reader.Value);
-                        //  MessageBox.Show("Token: " + reader.TokenType + ", Value: " + reader.Value, "");
-                        //}
-                        //else
-                        //{
-                        //  Console.WriteLine("Token: {0}", reader.TokenType);
-                        //}
-                        //if (o1["CPU"] != null)
-                        //  MessageBox.Show("ok", "");
-                        //else MessageBox.Show("not ok", "");
                     }
                     Dispatcher.Invoke(new Action(() =>
                     {
                         if (ParametersBox.SelectedIndex != -1)
                         {
-                            //MessageBox.Show("ok", "");
                             if (o1[ParametersBox.SelectedValue.ToString()] != null)
                             {
-                                //MessageBox.Show("что-то есть", "");
-                                //MessageBox.Show(((int)(o1.GetValue(ParametersBox.SelectedValue.ToString()))).ToString(), "");
                                 var index = Devices.IndexOf(device);
                                 if (LineSeries[index].Points.Count >= 30)
                                     LineSeries[index].Points.RemoveAt(0);
@@ -238,24 +120,7 @@ namespace AppForStand
                                 Model.InvalidatePlot(true);
                             }
                         }
-                        //else MessageBox.Show("not ok", "");
-                        //MessageBox.Show("2", "");
                     }));
-                    //box.ItemsSource = Parameters.ToArray();
-                    /*for (int i = 0; i < ParameterCounters.Count; i++)
-                    {
-                        ParameterCounters[i]--;
-                        if (ParameterCounters[i] == 0)
-                        {
-                            Parameters.RemoveAt(i);
-                            ParameterCounters.RemoveAt(i);
-                            foreach (var parameter in Parameters)
-                                MessageBox.Show(parameter.ToString() + " " + Parameters.Count.ToString());
-
-
-                        }
-                    }*/
-
                 }
                 catch { }
             };
@@ -278,16 +143,6 @@ namespace AppForStand
         {
             _parameters = new List<string>();
             ParametersBox.Items.Clear();
-
-             //var ls2 = new LineSeries();
-             //           //ls2.Points.
-             //           ls2.Points.Add(new DataPoint(10, 10));
-             //           ls2.Points.Add(new DataPoint(30, 20));
-             //           Model.Series.Clear();
-             //           Model.Series.Add(ls2);
-             //           Model.InvalidatePlot(true);
-                        //graphics.
-                        //graphics.Model = Model;
             string[] ports = SerialPort.GetPortNames();
             if (ports.Equals(PortsName))
             {
@@ -318,27 +173,13 @@ namespace AppForStand
                     Devices[i].StopReadingFromSerialPort();
                     Devices.RemoveAt(i);
                     LineSeries.RemoveAt(i);
-                  
-                    //graphics.Model = Model;
                     Model.Series.RemoveAt(i);
-                    //Model.Legends.Clear();
-                    //var l = new Legend
-                    //{
-                    //    LegendPlacement = LegendPlacement.Inside,
-                    //    LegendPosition = LegendPosition.RightTop,
-
-                    //};
-
-                    //Model.Legends.Add(l);
                     Model.InvalidatePlot(true);
                 }
 
             }
             PortToSendMessage.ItemsSource = new List<string>();
             PortToSendMessage.ItemsSource = PortsName;
-
-            //Parameters = 
-            //ParameterCounters = new List<int>();
         }
 
         private void Button_Flash(object sender, RoutedEventArgs e)
@@ -379,19 +220,16 @@ namespace AppForStand
                     Ports.Visibility = Visibility.Visible;
                     Monitors.Visibility = Visibility.Collapsed;
                     Graphics.Visibility = Visibility.Collapsed;
-                    //timer.Stop();
                     break;
                 case "Мониторы портов":
                     Ports.Visibility = Visibility.Collapsed;
                     Monitors.Visibility= Visibility.Visible;
                     Graphics.Visibility = Visibility.Collapsed;
-                    //timer.Stop();
                     break;
                 case "График":
                     Ports.Visibility = Visibility.Collapsed;
                     Monitors.Visibility = Visibility.Collapsed;
                     Graphics.Visibility = Visibility.Visible;
-                    //timer.Start();
                     break;
             }
         }
